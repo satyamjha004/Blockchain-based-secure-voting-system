@@ -1,0 +1,12 @@
+{
+  "name": "blockchain-voting",
+  "version": "1.0.0",
+  "description": "Blockchain Voting System",
+  "main": "index.js",
+  "scripts": {
+    "start": "npx live-server src"
+  },
+  "dependencies": {
+    "web3": "^1.10.0"
+  }
+}
