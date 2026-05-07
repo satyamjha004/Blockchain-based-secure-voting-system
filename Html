@@ -1,0 +1,1098 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Blockchain Voting System | Professional Portal</title>
+
+    <!-- External Libraries -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.6.0/dist/web3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      /* Default Colors */
+      body {
+        background-color: white;
+        color: black;
+        transition: 0.3s;
+      }
+
+      /* Dark Mode Colors */
+      body.dark-mode {
+        background-color: #1a1a1a;
+        color: #ffffff;
+      }
+
+      /* Dashboard cards ko bhi dark karne ke liye */
+      body.dark-mode .card {
+        background-color: #2d2d2d;
+        color: white;
+        border: 1px solid #444;
+      }
+      /* Light aur Dark Variable Define karein */
+      :root {
+        --bg-color: #f4f7f6;
+        --card-bg: #ffffff;
+        --text-color: #333;
+        --sidebar-bg: #2c3e50;
+      }
+
+      [data-theme="dark"] {
+        --bg-color: #121212;
+        --card-bg: #1e1e1e;
+        --text-color: #e0e0e0;
+        --sidebar-bg: #000000;
+      }
+
+      /* In variables ko body aur cards par apply karein */
+      body {
+        background-color: var(--bg-color) !important;
+        color: var(--text-color) !important;
+        transition: 0.3s;
+      }
+
+      .login-card,
+      .card,
+      .table {
+        background-color: var(--card-bg) !important;
+        color: var(--text-color) !important;
+        border: 1px solid #444;
+      }
+
+      /* Sidebar ke liye */
+      .sidebar {
+        background-color: var(--sidebar-bg) !important;
+      }
+      :root {
+        --sidebar-bg: #2c3e50;
+        --main-bg: #f4f7f6;
+        --accent: #3498db;
+      }
+      body {
+        background: var(--main-bg);
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      /* Login Page (Refer to "login page.png") */
+      #loginPage {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .login-card {
+        width: 400px;
+        padding: 40px;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      /* Layout Setup */
+      .sidebar {
+        width: 260px;
+        height: 100vh;
+        background: var(--sidebar-bg);
+        color: white;
+        position: fixed;
+        left: 0;
+        top: 0;
+        transition: 0.3s;
+      }
+      .main-content {
+        margin-left: 260px;
+        padding: 30px;
+      }
+
+      /* Sidebar Navigation */
+      .sidebar-header {
+        padding: 20px;
+        font-size: 1.5rem;
+        font-weight: bold;
+        border-bottom: 1px solid #34495e;
+      }
+      .nav-link {
+        color: #bdc3c7;
+        padding: 15px 25px;
+        cursor: pointer;
+        border-bottom: 1px solid #34495e;
+        transition: 0.3s;
+      }
+      .nav-link:hover,
+      .nav-link.active {
+        background: #34495e;
+        color: white;
+      }
+
+      /* Cards & Components */
+      .stat-card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        text-align: center;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .btn-custom {
+        background: var(--accent);
+        color: white;
+        border-radius: 8px;
+        padding: 10px 20px;
+        border: none;
+      }
+      /* --- DARK MODE STYLES --- */
+
+      /* Jab body par .dark-mode class lagegi, tab ye colors apply honge */
+      body.dark-mode {
+        background-color: #121212 !important; /* Gehra kala rang */
+        color: #ffffff !important; /* Safed text */
+      }
+
+      /* Sidebar ko dark karne ke liye */
+      body.dark-mode .sidebar {
+        background-color: #1f1f1f !important;
+        border-right: 1px solid #333;
+      }
+
+      /* Dashboard ke cards ko dark karne ke liye */
+      body.dark-mode .card {
+        background-color: #242424 !important;
+        color: white !important;
+        border: 1px solid #444 !important;
+      }
+
+      /* Inputs aur fields ko dark karne ke liye */
+      body.dark-mode input,
+      body.dark-mode select {
+        background-color: #333 !important;
+        color: white !important;
+        border: 1px solid #555 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="loginPage">
+      <div class="login-card">
+        <div class="mb-4"><span style="font-size: 50px">🔒</span></div>
+        <h3 class="mb-3" id="authTitle">Sign In</h3>
+
+        <div id="authInputs">
+          <!-- Ye fields hamesha dikhengi -->
+          <input
+            type="email"
+            id="userEmail"
+            class="form-control mb-3"
+            placeholder="Email Address"
+          />
+
+          <!-- Ye fields sirf Registration ke waqt dikhengi -->
+          <div id="extraFields" style="display: none">
+            <input
+              type="text"
+              id="userName"
+              class="form-control mb-3"
+              placeholder="Full Name"
+            />
+            <input type="date" id="userDOB" class="form-control mb-3" />
+          </div>
+
+          <input
+            type="password"
+            id="userPass"
+            class="form-control mb-4"
+            placeholder="Password"
+          />
+        </div>
+
+        <button
+          id="authBtn"
+          onclick="handleLogin()"
+          class="btn btn-primary w-100"
+        >
+          SIGN IN
+        </button>
+
+        <p class="mt-3 small" id="toggleText">
+          Create New User
+          <a href="javascript:void(0)" onclick="switchToRegister()"
+            >Register Here</a
+          >
+        </p>
+        <p class="mt-2 text-muted small">Copyright © Voting System 2026</p>
+      </div>
+    </div>
+
+    <!-- 2. SIDEBAR (Refer to "admin panel.png") -->
+    <div id="sidebar" class="sidebar hidden">
+      <!-- Theme Toggle Button -->
+      <div style="position: fixed; top: 20px; right: 20px; z-index: 1000">
+        <button
+          id="themeBtn"
+          onclick="toggleTheme()"
+          class="btn btn-outline-secondary"
+        >
+          🌙 Dark Mode
+        </button>
+      </div>
+      <div class="sidebar-header">Voting System</div>
+      <div
+        class="nav-link"
+        id="link-dashboard"
+        onclick="switchPage('dashboard')"
+      >
+        📊 Dashboard
+      </div>
+      <div class="nav-link" id="link-users" onclick="switchPage('users')">
+        👥 View Users
+      </div>
+      <div
+        class="nav-link"
+        id="link-candidates"
+        onclick="switchPage('candidates')"
+      >
+        👤 Candidate
+      </div>
+      <div
+        class="nav-link"
+        id="link-voting"
+        onclick="
+          switchPage('voting');
+          displayCandidates();
+        "
+      >
+        🗳️ Voting Area
+      </div>
+
+      <div class="nav-link" id="link-results" onclick="switchPage('results')">
+        📈 Result
+      </div>
+      <div class="nav-link text-danger mt-5" onclick="location.reload()">
+        🚪 Logout
+      </div>
+    </div>
+
+    <!-- 3. MAIN CONTENT AREA -->
+    <div id="mainContent" class="main-content hidden">
+      <!-- DASHBOARD (Refer to "admin panel.png") -->
+      <div id="dashboard" class="page-section">
+        <h2 class="mb-4">Admin Dashboard</h2>
+        <div class="row g-4">
+          <div class="col-md-4">
+            <div class="stat-card">
+              <h3>Users</h3>
+              <h2 id="displayUsers">0</h2>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="stat-card">
+              <h3>Candidates</h3>
+              <h2 id="displayCandidates">0</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW USERS (Refer to "view user.png") -->
+      <div id="users" class="page-section hidden">
+        <h2 class="mb-4">Registered Users</h2>
+        <div class="bg-white p-4 rounded shadow-sm">
+          <table class="table">
+            <thead class="table-light">
+              <tr>
+                <th>Full Name</th>
+                <th>Email ID</th>
+                <th>Date of Birth</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="userTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ADD CANDIDATE (Refer to "add candidate.png") -->
+      <div id="candidates" class="page-section hidden">
+        <h2 class="mb-4">Add New Candidate</h2>
+        <div class="bg-white p-4 rounded shadow-sm" style="max-width: 600px">
+          <label class="form-label">Name</label>
+          <input
+            type="text"
+            id="candName"
+            class="form-control mb-3"
+            placeholder="Enter Candidate Name"
+          />
+          <label class="form-label">Location</label>
+          <input
+            type="text"
+            id="candLoc"
+            class="form-control mb-4"
+            placeholder="Enter City/Location"
+          />
+          <button class="btn btn-custom w-100" onclick="addCandidate()">
+            ADD CANDIDATE
+          </button>
+        </div>
+      </div>
+      <div id="voting" class="page-section hidden">
+        <h2 class="mb-4">Cast Your Vote</h2>
+        <div id="candidateList" class="row g-4">
+          <!-- Cards yahan automatically load honge -->
+        </div>
+      </div>
+
+      <!-- RESULTS (Refer to "result of election.png") -->
+      <div id="results" class="page-section hidden">
+        <h2 class="mb-4">Election Results</h2>
+        <div class="row">
+          <div class="col-md-8">
+            <div class="card p-4">
+              <canvas id="votingChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let web3;
+      let contract;
+      const contractAddress = "0x6f67CbDE4862FA1B40B45E15DC9Ce6D10fc81671"; // 👈 APNA ADDRESS CHECK KARO
+
+      // ⚠️ YAHA APNA ABI PASTE KARO
+      const abi = [
+        {
+          inputs: [],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          inputs: [],
+          name: "admin",
+          outputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+          constant: true,
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          name: "candidates",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "id",
+              type: "uint256",
+            },
+            {
+              internalType: "string",
+              name: "name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "location",
+              type: "string",
+            },
+            {
+              internalType: "uint256",
+              name: "voteCount",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+          constant: true,
+        },
+        {
+          inputs: [],
+          name: "candidatesCount",
+          outputs: [
+            {
+              internalType: "uint256",
+              name: "",
+              type: "uint256",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+          constant: true,
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "",
+              type: "address",
+            },
+          ],
+          name: "users",
+          outputs: [
+            {
+              internalType: "bool",
+              name: "isRegistered",
+              type: "bool",
+            },
+            {
+              internalType: "bool",
+              name: "hasVoted",
+              type: "bool",
+            },
+          ],
+          stateMutability: "view",
+          type: "function",
+          constant: true,
+        },
+        {
+          inputs: [
+            {
+              internalType: "string",
+              name: "_name",
+              type: "string",
+            },
+            {
+              internalType: "string",
+              name: "_location",
+              type: "string",
+            },
+          ],
+          name: "addCandidate",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "address",
+              name: "_userAddress",
+              type: "address",
+            },
+          ],
+          name: "registerUser",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [
+            {
+              internalType: "uint256",
+              name: "_candidateId",
+              type: "uint256",
+            },
+          ],
+          name: "vote",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        }, // ... (Pura JSON array yaha copy-paste karo)
+      ];
+
+      let isRegistration = false;
+
+      // 1. UI badalne ke liye (Login se Register)
+      function switchToRegister() {
+        isRegistration = true;
+        document.getElementById("authTitle").innerText = "Create Account";
+        document.getElementById("authBtn").innerText = "REGISTER NOW";
+        document
+          .getElementById("authBtn")
+          .setAttribute("onclick", "handleRegister()");
+        document.getElementById("toggleText").innerHTML =
+          `Already Account <a href="javascript:void(0)" onclick="switchToLogin()">Sign In</a>`;
+      }
+
+      // 2. UI badalne ke liye (Register se Login)
+      function switchToLogin() {
+        isRegistration = false;
+        document.getElementById("authTitle").innerText = "Sign In";
+        document.getElementById("authBtn").innerText = "SIGN IN";
+        document
+          .getElementById("authBtn")
+          .setAttribute("onclick", "handleLogin()");
+        document.getElementById("toggleText").innerHTML =
+          `Create New User <a href="javascript:void(0)" onclick="switchToRegister()">Register Here</a>`;
+      }
+
+      // 3. Register karne ka function
+      function handleRegister() {
+        const email = document.getElementById("userEmail").value;
+        const pass = document.getElementById("userPass").value;
+
+        if (email && pass) {
+          localStorage.setItem("storedEmail", email);
+          localStorage.setItem("storedPass", pass);
+          alert("Registration Successful! 🎉 Ab Sign In karein.");
+          switchToLogin();
+        } else {
+          alert("Enter Email and Password");
+        }
+      }
+
+      // 4. Login karne ka function
+      async function handleLogin() {
+        const emailInput = document.getElementById("userEmail").value;
+        const passInput = document.getElementById("userPass").value;
+
+        const savedEmail = localStorage.getItem("storedEmail");
+        const savedPass = localStorage.getItem("storedPass");
+
+        if (emailInput === savedEmail && passInput === savedPass) {
+          alert("Login Successful!");
+          // Yaha aapka purana logic jo dashboard kholta hai
+          if (typeof connectAndLogin === "function") {
+            connectAndLogin();
+          } else {
+            switchPage("dashboard"); // Agar switchPage function use kar rahe ho toh
+          }
+        } else {
+          alert("Incorrect email or password! ❌");
+        }
+        // --- STEP 3: handleLogin function ke andar ye lines add karein ---
+
+        function handleLogin() {
+          const emailInput = document.getElementById("userEmail").value;
+          const passInput = document.getElementById("userPass").value;
+          const savedDataRaw = localStorage.getItem(emailInput);
+
+          if (savedDataRaw) {
+            const userData = JSON.parse(savedDataRaw);
+            if (emailInput === userData.email && passInput === userData.pass) {
+              // --- YE DO LINES ZAROOR ADD KAREIN ---
+              updateDashboardCount();
+              displayRegisteredUsers();
+              // ------------------------------------
+
+              alert(`Welcome, ${userData.name}!`);
+              switchPage("dashboard");
+            } else {
+              alert("Ghalat Password!");
+            }
+          } else {
+            alert("Account nahi mila!");
+          }
+        }
+      }
+      // --- BLOCK 1: Data Fetching Functions ---
+      let candidates = [];
+
+      async function loadData() {
+        try {
+          const count = await contract.methods.candidatesCount().call();
+          candidates = [];
+          for (let i = 1; i <= count; i++) {
+            const cand = await contract.methods.candidates(i).call();
+            candidates.push({
+              id: cand.id,
+              name: cand.name,
+              location: cand.location,
+              voteCount: cand.voteCount,
+            });
+          }
+        } catch (error) {
+          console.error("Data load nahi ho paya:", error);
+        }
+      }
+
+      function displayCandidates() {
+        const container = document.getElementById("candidateCardsContainer");
+        if (!container) return;
+        container.innerHTML = "";
+        candidates.forEach((cand) => {
+          container.innerHTML += `
+            <div class="col-md-4 mb-4">
+                <div class="card shadow p-3">
+                    <h4>${cand.name}</h4>
+                    <p>📍 ${cand.location || "Kanpur"}</p>
+                    <div class="bg-light p-2 mb-2">Votes: ${cand.voteCount}</div>
+                    <button class="btn btn-primary" onclick="castVote(${cand.id})">VOTE NOW</button>
+                </div>
+            </div>`;
+        });
+      }
+      // 1. Dashboard par total users ka count dikhane ke liye
+      function updateDashboardCount() {
+        let userCount = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+          let key = localStorage.key(i);
+          if (key.includes("@")) {
+            // Sirf email wali keys ko count karein
+            userCount++;
+          }
+        }
+        const userDisplay = document.getElementById("displayUsers");
+        if (userDisplay) {
+          userDisplay.innerText = userCount;
+        }
+      }
+
+      // 2. "View Users" section mein table bharne ke liye
+      function displayRegisteredUsers() {
+        const tableBody = document.getElementById("userTableBody");
+        if (!tableBody) return;
+
+        tableBody.innerHTML = ""; // Purana static data saaf karein
+
+        for (let i = 0; i < localStorage.length; i++) {
+          let key = localStorage.key(i);
+          if (key.includes("@")) {
+            let userData = JSON.parse(localStorage.getItem(key));
+
+            // Nayi row banayein (Name, Email, DOB ke saath)
+            let row = `<tr>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.dob}</td>
+                <td><span class="badge bg-success">Registered</span></td>
+            </tr>`;
+            tableBody.innerHTML += row;
+          }
+        }
+      }
+      async function connectAndLogin() {
+        if (window.ethereum) {
+          try {
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            web3 = new Web3(window.ethereum);
+            contract = new web3.eth.Contract(abi, contractAddress);
+
+            document.getElementById("loginPage").classList.add("hidden");
+            document.getElementById("sidebar").classList.remove("hidden");
+            document.getElementById("mainContent").classList.remove("hidden");
+
+            loadData();
+          } catch (e) {
+            alert("Login failed!");
+          }
+        } else {
+          alert("Install MetaMask!");
+        }
+        function handleLogin() {
+          // ... aapka purana login check logic ...
+          if (loginSuccessful) {
+            updateDashboardCount(); // Dashboard count refresh karo
+            displayRegisteredUsers(); // Table refresh karo
+            switchPage("dashboard");
+          }
+        }
+      }
+
+      // Registration mode on karne ke liye
+      function switchToRegister() {
+        document.getElementById("authTitle").innerText = "Create Account";
+        document.getElementById("extraFields").style.display = "block"; // Name aur DOB dikhao
+        document.getElementById("authBtn").innerText = "REGISTER NOW";
+        document
+          .getElementById("authBtn")
+          .setAttribute("onclick", "handleRegister()");
+        document.getElementById("toggleText").innerHTML =
+          `Account hai? <a href="javascript:void(0)" onclick="switchToLogin()">Sign In</a>`;
+      }
+
+      // Login mode on karne ke liye
+      function switchToLogin() {
+        document.getElementById("authTitle").innerText = "Sign In";
+        document.getElementById("extraFields").style.display = "none"; // Extra fields chhupao
+        document.getElementById("authBtn").innerText = "SIGN IN";
+        document
+          .getElementById("authBtn")
+          .setAttribute("onclick", "handleLogin()");
+        document.getElementById("toggleText").innerHTML =
+          `Create New User <a href="javascript:void(0)" onclick="switchToRegister()">Register Here</a>`;
+      }
+
+      // Registration Function
+      function handleRegister() {
+        const name = document.getElementById("userName").value;
+        const email = document.getElementById("userEmail").value;
+        const dob = document.getElementById("userDOB").value;
+        const pass = document.getElementById("userPass").value;
+
+        if (name && email && dob && pass) {
+          // User ka sara data ek object me save kar rahe hain
+          const userData = {
+            name: name,
+            email: email,
+            dob: dob,
+            pass: pass,
+          };
+
+          // Browser ki LocalStorage me save kar diya
+          localStorage.setItem(email, JSON.stringify(userData));
+
+          alert(`Welcome ${name}! Registration successful. 🎉`);
+          switchToLogin();
+        } else {
+          alert("it is important to fill in all the details!");
+        }
+      }
+
+      // Login Function (Strict Check)
+      function handleLogin() {
+        const emailInput = document.getElementById("userEmail").value;
+        const passInput = document.getElementById("userPass").value;
+
+        // LocalStorage se data nikalna
+        const savedDataRaw = localStorage.getItem(emailInput);
+
+        if (savedDataRaw) {
+          const userData = JSON.parse(savedDataRaw);
+
+          // Email aur Password dono match hone chahiye
+          if (emailInput === userData.email && passInput === userData.pass) {
+            alert(`Welcome back, ${userData.name}!`);
+
+            // Success! Ab aap apna main dashboard show kar sakte ho
+            connectAndLogin();
+          } else {
+            alert("Wrong password! ❌");
+          }
+        } else {
+          alert("Please enter email or password.");
+        }
+      }
+      function switchPage(pageId) {
+        // Sabse pehle saare sections ko chhupao
+        document.querySelectorAll(".page-section").forEach((section) => {
+          section.classList.add("hidden");
+        });
+
+        // Jo page chahiye usey dikhao
+        const activePage = document.getElementById(pageId);
+        if (activePage) {
+          activePage.classList.remove("hidden");
+        }
+
+        // AGAR RESULT PAGE HAI TOH CHART CHALAO
+        if (pageId === "results") {
+          console.log("Result page detected! Calling updateChart...");
+          updateChart();
+        }
+      }
+
+      async function addCandidate() {
+        try {
+          // MetaMask se current account mangna
+          const accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          const currentAccount = accounts[0];
+
+          const name = document.getElementById("candName").value;
+          const loc = document.getElementById("candLoc").value;
+
+          if (!name || !loc) {
+            alert("Bhai, Name aur Location dono daalo!");
+            return;
+          }
+
+          // Transaction bhejte waqt 'from' address dena zaroori hai
+          await contract.methods.addCandidate(name, loc).send({
+            from: currentAccount,
+            gas: 1000000,
+          });
+
+          alert("Candidate Add Ho Gaya! ✅");
+          location.reload(); // Dashboard refresh karne ke liye
+        } catch (e) {
+          console.error(e);
+          alert("Error: Shayad aap Admin nahi hain ya network issue hai.");
+        }
+      }
+
+      // Is function ko bhi thoda clean kar diya hai taaki error na aaye
+      async function loadData() {
+        try {
+          if (!contract) return;
+
+          const cCount = await contract.methods.candidatesCount().call();
+          const displayElement = document.getElementById("displayCandidates");
+
+          if (displayElement) {
+            displayElement.innerText = cCount.toString();
+          }
+
+          // UI update
+          if (typeof displayCandidates === "function") {
+            displayCandidates();
+          }
+        } catch (error) {
+          console.error("Data load error:", error);
+        }
+        function updateDashboardCount() {
+          let userCount = 0;
+          // LocalStorage mein jitne keys hain, unhe check karo
+          for (let i = 0; i < localStorage.length; i++) {
+            let key = localStorage.key(i);
+            // Hum sirf unhi keys ko ginte hain jo users hain (jisme @ hota hai)
+            if (key.includes("@")) {
+              userCount++;
+            }
+          }
+          // Dashboard par count update karo
+          const userDisplay = document.getElementById("displayUsers"); // Check karein aapki ID yahi hai ya 'userCount'
+          if (userDisplay) {
+            userDisplay.innerText = userCount;
+          }
+        }
+      }
+
+      async function updateChart() {
+        try {
+          console.log("Fetching data for chart...");
+          const count = await contract.methods.candidatesCount().call();
+
+          let names = [];
+          let votes = [];
+
+          for (let i = 1; i <= count; i++) {
+            const cand = await contract.methods.candidates(i).call();
+            names.push(cand.name);
+            votes.push(parseInt(cand.voteCount)); // Ensure it's a number
+          }
+
+          console.log("Chart Data Ready:", names, votes);
+
+          const canvas = document.getElementById("votingChart");
+          if (!canvas) {
+            console.error("Canvas element 'votingChart' nahi mila!");
+            return;
+          }
+
+          const ctx = canvas.getContext("2d");
+
+          // Purane chart ko khatam karo taaki naya ban sake
+          if (window.myChart instanceof Chart) {
+            window.myChart.destroy();
+          }
+
+          window.myChart = new Chart(ctx, {
+            type: "bar",
+            data: {
+              labels: names,
+              datasets: [
+                {
+                  label: "Votes Count",
+                  data: votes,
+                  backgroundColor: [
+                    "rgba(255, 99, 132, 0.7)",
+                    "rgba(54, 162, 235, 0.7)",
+                    "rgba(255, 206, 86, 0.7)",
+                    "rgba(75, 192, 192, 0.7)",
+                    "rgba(153, 102, 255, 0.7)",
+                  ],
+                  borderColor: "rgba(0, 0, 0, 0.1)",
+                  borderWidth: 1,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  ticks: { stepSize: 1 },
+                },
+              },
+            },
+          });
+          console.log("Chart successfully rendered!");
+        } catch (error) {
+          console.error("Chart Update Error:", error);
+        }
+      }
+      // Function 1: Blockchain se candidates lekar screen par dikhane ke liye
+      async function displayCandidates() {
+        const count = await contract.methods.candidatesCount().call();
+        const container = document.getElementById("candidateList");
+        container.innerHTML = "";
+
+        for (let i = 1; i <= count; i++) {
+          const cand = await contract.methods.candidates(i).call();
+          container.innerHTML += `
+                  <div class="col-md-4">
+                      <div class="card shadow-sm p-3 border-0 text-center">
+                          <h5 class="text-primary">${cand.name}</h5>
+                          <p class="text-muted mb-2">📍 ${cand.location}</p>
+                          <p class="badge bg-light text-dark">Votes: ${cand.voteCount}</p>
+                          <button class="btn btn-primary w-100" onclick="castVote(${cand.id})">VOTE NOW</button>
+                      </div>
+                  </div>`;
+        }
+      }
+      async function loadData() {
+        // ... aapka purana logic ...
+        const cCount = await contract.methods.candidatesCount().call();
+        document.getElementById("displayCandidates").innerText = cCount;
+
+        // YE LINE ADD KARO:
+        displayCandidates();
+      }
+      // Function 2: Vote karne ka logic
+      async function castVote(id) {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts",
+        });
+        try {
+          await contract.methods.vote(id).send({
+            from: accounts[0],
+            gas: 500000,
+          });
+          alert("Vote Dal Gaya! ✅");
+          location.reload();
+        } catch (e) {
+          alert("Aap pehle hi vote kar chuke hain! 🚫");
+        }
+      }
+      let isLoginMode = true;
+
+      function toggleAuth() {
+        isLoginMode = !isLoginMode;
+        const title = document.getElementById("authTitle");
+        const btn = document.getElementById("authBtn");
+        const inputs = document.getElementById("authInputs");
+
+        if (!isLoginMode) {
+          title.innerText = "User Registration";
+          btn.innerText = "REGISTER ON BLOCKCHAIN";
+          btn.setAttribute("onclick", "registerUser()");
+          inputs.innerHTML = `<p class="text-muted small">Aapka MetaMask wallet address register kiya jayega.</p>`;
+        } else {
+          title.innerText = "Sign In";
+          btn.innerText = "SIGN IN";
+          btn.setAttribute("onclick", "connectAndLogin()");
+          inputs.innerHTML = `
+            <input type="email" id="adminEmail" class="form-control mb-3" placeholder="admin@gmail.com" value="admin@gmail.com" />
+            <input type="password" id="adminPass" class="form-control mb-4" placeholder="••••" />
+        `;
+        }
+      }
+
+      async function registerUser() {
+        if (window.ethereum) {
+          try {
+            await window.ethereum.request({ method: "eth_requestAccounts" });
+            web3 = new Web3(window.ethereum);
+            contract = new web3.eth.Contract(abi, contractAddress);
+            const accounts = await web3.eth.getAccounts();
+
+            // Smart Contract ka registerUser function call ho raha hai
+            await contract.methods
+              .registerUser(accounts[0])
+              .send({ from: accounts[0] });
+
+            alert("Registration Successful! 🎉 Ab aap login kar sakte hain.");
+            toggleAuth(); // Wapas login par le jao
+          } catch (error) {
+            console.error(error);
+            alert(
+              "Registration fail ho gaya! Shayad aap pehle se registered hain.",
+            );
+          }
+        } else {
+          alert("MetaMask install karein!");
+        }
+      }
+      // --- STEP 2: Ye functions data fetch karne ke liye hain ---
+
+      function updateDashboardCount() {
+        let userCount = 0;
+        for (let i = 0; i < localStorage.length; i++) {
+          let key = localStorage.key(i);
+          if (key.includes("@")) {
+            // Sirf email wali keys ko gino
+            userCount++;
+          }
+        }
+        const userDisplay = document.getElementById("displayUsers");
+        if (userDisplay) {
+          userDisplay.innerText = userCount;
+        }
+      }
+
+      function displayRegisteredUsers() {
+        const tableBody = document.getElementById("userTableBody");
+        if (!tableBody) return;
+
+        tableBody.innerHTML = ""; // Purana static data clear karo
+
+        for (let i = 0; i < localStorage.length; i++) {
+          let key = localStorage.key(i);
+          if (key.includes("@")) {
+            let userData = JSON.parse(localStorage.getItem(key));
+
+            let row = `<tr>
+                <td>${userData.name}</td>
+                <td>${userData.email}</td>
+                <td>${userData.dob}</td>
+                <td><span style="background: #28a745; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px;">Registered</span></td>
+            </tr>`;
+            tableBody.innerHTML += row;
+          }
+        }
+      }
+      // --- STEP 4: Script ke end mein ye line daal dein ---
+
+      window.onload = function () {
+        // Agar koi pehle se login hai ya data check karna hai
+        updateDashboardCount();
+        displayRegisteredUsers();
+      };
+      // --- DARK MODE LOGIC START ---
+      function toggleTheme() {
+        const body = document.body;
+        const themeBtn = document.getElementById("themeBtn");
+
+        // Check karein ki abhi dark mode hai ya nahi
+        if (body.classList.contains("dark-mode")) {
+          // Dark se Light karein
+          body.classList.remove("dark-mode");
+          localStorage.setItem("theme", "light");
+          if (themeBtn) themeBtn.innerText = "🌙 Dark Mode";
+        } else {
+          // Light se Dark karein
+          body.classList.add("dark-mode");
+          localStorage.setItem("theme", "dark");
+          if (themeBtn) themeBtn.innerText = "☀️ Light Mode";
+        }
+      }
+
+      // Page refresh par theme yaad rakhne ke liye logic
+      function applySavedTheme() {
+        const savedTheme = localStorage.getItem("theme");
+        if (savedTheme === "dark") {
+          document.body.classList.add("dark-mode");
+          const themeBtn = document.getElementById("themeBtn");
+          if (themeBtn) themeBtn.innerText = "☀️ Light Mode";
+        }
+      }
+
+      // Ise window.onload mein call zaroor karein
+      window.addEventListener("DOMContentLoaded", applySavedTheme);
+      // --- DARK MODE LOGIC END ---
+    </script>
+  </body>
+</html>
